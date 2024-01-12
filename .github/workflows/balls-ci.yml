@@ -58,7 +58,7 @@ jobs:
           sudo apt install --fix-missing valgrind
           cd threading
           nimble --accept develop
-          nimble --accept install "https://github.com/disruptek/balls"
+          nimble --accept install "https://github.com/disruptek/balls#v4"
 
       - name: Run tests
         shell: bash
