@@ -64,4 +64,4 @@ jobs:
         shell: bash
         run: |
           cd threading
-          balls --path="." --panics:on --exceptions:goto --backend:c --mm:arc --mm:orc --threads:on
+          balls --path="." -d:useMalloc --skipProjCfg:on --panics:on --exceptions:goto --backend:c --mm:arc --mm:orc --threads:on
