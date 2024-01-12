@@ -1,4 +1,4 @@
-name: threading
+name: balls-threading
 on: [push, pull_request]
 
 jobs:
