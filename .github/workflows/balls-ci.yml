@@ -1,0 +1,69 @@
+name: threading
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        branch: [master]
+        target:
+          - os: linux
+            cpu: amd64
+            nim_branch: devel
+          - os: linux
+            cpu: amd64
+            nim_branch: version-2-0
+        include:
+          - target:
+              os: linux
+            builder: ubuntu-20.04
+
+    name: '${{ matrix.target.os }}-${{ matrix.target.cpu }}-nim-${{ matrix.target.nim_branch }} (${{ matrix.branch }})'
+    runs-on: ${{ matrix.builder }}
+    env:
+      NIM_DIR: nim-${{ matrix.target.nim_branch }}-${{ matrix.target.cpu }}
+      NIM_BRANCH: ${{ matrix.target.nim_branch }}
+      NIM_ARCH: ${{ matrix.target.cpu }}
+    steps:
+      - name: Checkout threading
+        uses: actions/checkout@v4
+        with:
+          path: threading
+          submodules: false
+
+      - name: Restore Nim from cache
+        if: >
+          steps.nim-compiler-cache.outputs.cache-hit != 'true' &&
+          matrix.target.nim_branch != 'devel'
+        id: nim-compiler-cache
+        uses: actions/cache@v3
+        with:
+          path: '${{ github.workspace }}/nim-${{ matrix.target.nim_branch }}-${{ matrix.target.cpu }}'
+          key: 'nim-${{ matrix.target.cpu }}-${{ matrix.target.nim_branch }}'
+
+      - name: Setup Nim
+        uses: alaviss/setup-nim@0.1.1
+        with:
+          path: 'nim'
+          version: ${{ matrix.target.nim_branch }}
+          architecture: ${{ matrix.target.cpu }}
+
+
+      - name: Prepare balls
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt install --fix-missing valgrind
+          cd project
+          nimble --accept develop
+          nimble --accept install "https://github.com/disruptek/balls"
+          cd examples
+          balls --path=".." --panics:on --exceptions:goto --backend:c --mm:arc --mm:orc --threads:on
+
+      - name: Run tests
+        shell: bash
+        run: |
+          cd threading
+          balls --path="." --panics:on --exceptions:goto --backend:c --mm:arc --mm:orc --threads:on
