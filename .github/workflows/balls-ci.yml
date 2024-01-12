@@ -50,7 +50,6 @@ jobs:
           version: ${{ matrix.target.nim_branch }}
           architecture: ${{ matrix.target.cpu }}
 
-
       - name: Prepare balls
         shell: bash
         run: |
